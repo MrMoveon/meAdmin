@@ -15,9 +15,9 @@
                 <Button class="toggle-btn" type="text" @click="toggleClick">
                     <Icon type="navicon" size="32"></Icon>
                 </Button>
-                <!-- <Menu class="site-menu" mode="horizontal" :theme="dark" active-name="1">
+                <Menu class="site-menu" mode="horizontal" theme="dark" active-name="1">
                             <MenuItem name="1">
-                                <Icon type="ios-paper"></Icon>
+                                <Icon type="code"></Icon>
                                 内容管理
                             </MenuItem>
                             <MenuItem name="2">
@@ -28,7 +28,7 @@
                                 <Icon type="settings"></Icon>
                                 综合设置
                             </MenuItem>
-                        </Menu> -->
+                        </Menu>
             </div>
             <!-- 工具 -->
             <div class="layout-header-tool">
@@ -68,49 +68,113 @@
         <div class="layout-container">
             <!-- 菜单 -->
             <div class="layout-container-menu">
-                <Menu theme="light" width='200' active-name="1-2" :open-names="['1']">
-                    <Submenu name="1">
+                <Menu theme="light" width='200' :active-name="activeName" :open-names="[openNames]">
+                    <Submenu :name="index+1" v-for="(item,index) in menu" :key="index">
                         <template slot="title">
-                            <span class="title-span title-active">
-                                <Icon type="ios-paper"></Icon>
-                                <span class="title-text">内容管理</span>
+                            <span class="title-span" :class="{'title-active':(index+1)===openNames}">
+                                <Icon :type="item.meta.icon"></Icon>
+                                <span class="title-text">{{item.meta.title}}</span>
                             </span>
                         </template>
-                        <MenuItem name="1-1">文章管理</MenuItem>
-                        <MenuItem name="1-2">评论管理</MenuItem>
-                        <MenuItem name="1-3">举报管理</MenuItem>
+                        <MenuItem :name="menuIndex(index,cIndex)" v-for="(child,cIndex) in item.children" :key='cIndex'  @click.native="selectMenu(child,menuIndex(index,cIndex))">{{child.meta.title}}</MenuItem>
                     </Submenu>
-                    <Submenu name="2">
-                        <template slot="title">
-                            <span class="title-span">
-                                <Icon type="ios-people"></Icon>
-                                <span class="title-text">用户管理</span>
-                            </span>
-                        </template>
-                        <MenuItem name="2-1">新增用户</MenuItem>
-                        <MenuItem name="2-2">活跃用户</MenuItem>
-                    </Submenu>
-
                 </Menu>
             </div>
             <!-- 主要内容 -->
-            <div class="layout-container-main"></div>
+            <div class="layout-container-main">
+                <div class="layout-container-tabs">
+                    <router-link :to="{name:item.name}" class="ivu-tag ivu-tag-closable"  v-for="(item,index) in conTabs" :key="index" tag='div'>
+                    
+                        <span class="ivu-tag-text">{{item.title}}</span>
+                        <i class="ivu-icon ivu-icon-ios-close-empty" @click.stop="handleClose(item)" v-if="item.title!=='首页'"></i>
+                   
+                    </router-link>
+                </div>
+                <div class="layout-container-view">
+                    <router-view></router-view>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import {routesList} from '@/router'
+
 export default {
     name: 'admin-layout',
     data () {
         return {
-
+            conTabs: [
+                {title: '首页', name: 'Home', index: ''}
+            ],
+            openNames: 1,
+            activeName: ''
         }
+    },
+    computed: {
+        menu () {
+            let filter = ['AdminLayout', 'error']
+            let Menu = []
+            routesList.map((item, index) => {
+                if (filter.indexOf(item.name) === -1) {
+                    Menu.push(item)
+                }
+            })
+            return Menu
+        }
+
+    },
+    watch: {
+        '$route': 'menuChange'
     },
     methods: {
         toggleClick () {
 
+        },
+        menuIndex (index, cIndex) {
+            return (index + 1) + '-' + (cIndex + 1)
+        },
+        handleClose (name) {
+            const index = this.conTabs.indexOf(name)
+            this.conTabs.splice(index, 1)
+        },
+        selectMenu (item, index) {
+            if (this.inConTabs(item.name)) {
+                this.$router.push({'name': item.name})
+                return
+            }
+            this.$router.push({'name': item.name})
+            this.conTabs.push({
+                title: item.meta.title,
+                name: item.name,
+                index: index
+            })
+        },
+        // 判断conTabs里面是否存在name元素
+        inConTabs (name) {
+            let tabs = []
+            this.conTabs.map((item, index) => {
+                tabs.push(item.name)
+            })
+            return tabs.indexOf(name) !== -1
+        },
+        // 返回contabs里面的name元素的位置索引
+        inConTabsIndex (name) {
+            let tabs = []
+            this.conTabs.map((item, index) => {
+                tabs.push(item.name)
+            })
+            return tabs.indexOf(name)
+        },
+        // 路由改变，设置菜单的选中状态
+        menuChange (to, from) {
+            if (this.inConTabs(to.name)) {
+                this.openNames = parseInt(this.conTabs[this.inConTabsIndex(to.name)].index.substring(0, 1))
+                this.activeName = this.conTabs[this.inConTabsIndex(to.name)].index
+            }
         }
+
     }
 }
 </script>
@@ -163,7 +227,12 @@ export default {
         color: #fff;
     }
     .site-menu {
+        padding-left: 20px;
         background: transparent;
+        line-height: 70px;
+        .ivu-icon{
+            font-size: 18px;
+        }
     }
     .ivu-menu-horizontal.ivu-menu-light:after {
         background: transparent;
@@ -179,6 +248,8 @@ export default {
     }
     .ivu-menu-light.ivu-menu-horizontal .ivu-menu-item-active,
     .ivu-menu-light.ivu-menu-horizontal .ivu-menu-submenu-active {
+        height:67px;
+        line-height:67px;
         color: #fff;
         border-bottom: 3px solid #4fe3c1;
     }
@@ -252,12 +323,30 @@ export default {
     }
     .ivu-menu-vertical .ivu-menu-submenu .ivu-menu-item {
         padding-left: 48px;
+        font-weight: bold;
     }
 }
 
 // 内容主要
 .layout-container-main {
     flex: 1;
+    background: #f1f4f5;
+}
+.layout-container-tabs{
     background: #fff;
+    height: 40px;
+    border-bottom:solid 1px #e4eaec;
+    .ivu-tag{
+        width: 90px;
+        height: 40px;
+        margin: 0;
+        line-height: 40px;
+        background: transparent;
+        text-align: center;
+        border: none;
+        &.router-link-active{
+            background: #f1f4f5
+        }
+    }
 }
 </style>
