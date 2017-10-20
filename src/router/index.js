@@ -7,23 +7,8 @@ import Comments from '@/view/container/Comments'
 import UserList from '@/view/user/UserList'
 import Error from '@/view/error/error404'
 Vue.use(Router)
-export let routesList = [
-    {
-        path: '/',
-        name: 'AdminLayout',
-        component: AdminLayout,
-        redirect: '/home',
-        meta: {
-            title: '主页'
-        },
-        children: [
-            {
-                path: 'home',
-                name: 'Home',
-                component: Home
-            }
-        ]
-    },
+// 左侧菜单
+export const leftMenu = [
     {
         path: '/container',
         name: 'Container',
@@ -71,13 +56,35 @@ export let routesList = [
                 }
             }
         ]
-    },
+    }
+]
+// 错误页面
+export const error = [
     {
         path: '*',
         name: 'error',
         component: Error
     }
-
+]
+export const routesList = [
+    {
+        path: '/',
+        name: 'AdminLayout',
+        component: AdminLayout,
+        redirect: '/home',
+        meta: {
+            title: '主页'
+        },
+        children: [
+            {
+                path: 'home',
+                name: 'Home',
+                component: Home
+            }
+        ]
+    },
+    ...leftMenu,
+    ...error
 ]
 
 export default new Router({
