@@ -86,7 +86,6 @@
                                 <router-link tag='div' class="shrink-child-menu"  v-for="(child,cIndex) in item.children" :key='cIndex' :to="{name:child.name}">
                                     {{child.meta.title}}
                                 </router-link>
-                                <!-- <MenuItem :name="menuIndex(index,cIndex)" v-for="(child,cIndex) in item.children" :key='cIndex' @click.native="selectMenu(child,menuIndex(index,cIndex))">{{child.meta.title}}</MenuItem> -->
                             </div>
                         </Poptip>
                     </div>
@@ -112,24 +111,21 @@
 
 <script>
 import { leftMenu } from '@/router'
-
+import { mapGetters, mapMutations } from 'vuex'
 export default {
     name: 'admin-layout',
     data () {
         return {
-            conTabs: [
-                { title: '首页', name: 'Home', index: '' }
-            ],
-            openNames: 1,
-            activeName: '',
             menu: leftMenu,
             iconSize: 16
         }
     },
-    watch: {
-        '$route': 'menuChange'
+    computed: {
+        ...mapGetters(['loading', 'conTabs', 'openNames', 'activeName'])
     },
+
     methods: {
+        // 菜单隐藏显示
         toggleClick () {
             if (this.iconSize === 16) {
                 this.iconSize = 24
@@ -137,14 +133,13 @@ export default {
                 this.iconSize = 16
             }
         },
-        // 返回菜单索引1-1  1-2
-        menuIndex (index, cIndex) {
-            return (index + 1) + '-' + (cIndex + 1)
-        },
         // contabs点击关闭
         handleClose (name) {
             const index = this.conTabs.indexOf(name)
-            this.conTabs.splice(index, 1)
+            this.$store.commit('removeConTabs', index)
+            setTimeout(() => {
+                this.$router.push({ 'name': this.conTabs[index - 1].name})
+            }, 20)
         },
         // 左侧菜单点击
         selectMenu (item) {
@@ -153,10 +148,6 @@ export default {
                 return false
             }
             this.$router.push({ 'name': item.name })
-            this.conTabs.push({
-                title: item.meta.title,
-                name: item.name
-            })
         },
         // 判断conTabs里面是否存在name元素
         inConTabs (name) {
@@ -173,20 +164,6 @@ export default {
                 tabs.push(item.name)
             })
             return tabs.indexOf(name)
-        },
-        // 路由改变，设置菜单的选中状态
-        menuChange (to, from) {
-            if (this.inConTabs(to.name)) {
-                this.openNames = to.matched[0].name
-                this.activeName = this.conTabs[this.inConTabsIndex(to.name)].name
-            } else {
-                this.conTabs.push({
-                    title: to.meta.title,
-                    name: to.name
-                })
-                this.openNames = to.matched[0].name
-                this.activeName = to.name
-            }
         }
 
     }

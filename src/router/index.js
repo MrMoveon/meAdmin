@@ -1,6 +1,13 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+const _import = require('./_import_' + process.env.NODE_ENV)
 import AdminLayout from '@/view/layout/AdminLayout'
+const Login = _import('login/Login')
+// const Home = _import('home/Home')
+// const Article = _import('container/Article')
+// const Comments = _import('container/Comments')
+// const UserList = _import('user/UserList')
+// const Error = _import('error/error404')
 import Home from '@/view/home/Home'
 import Article from '@/view/container/Article'
 import Comments from '@/view/container/Comments'
@@ -66,6 +73,11 @@ export const error = [
         component: Error
     }
 ]
+export const login = {
+    path: '/login',
+    name: 'Login',
+    components: Login
+}
 export const routesList = [
     {
         path: '/',
@@ -83,6 +95,7 @@ export const routesList = [
             }
         ]
     },
+    login,
     ...leftMenu,
     ...error
 ]
